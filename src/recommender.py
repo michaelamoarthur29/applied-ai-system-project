@@ -27,6 +27,7 @@ class Song:
     valence: float
     danceability: float
     acousticness: float
+    spotlight: bool = False  # underrepresented / independent creator (MuseIQ fairness rule)
 
 @dataclass
 class UserProfile:
@@ -61,8 +62,8 @@ class Recommender:
         _, reasons = score_song(asdict(user), asdict(song))
         return ", ".join(reasons)
 
-def load_songs(csv_path: str) -> List[Dict]:
-    """Read songs from a CSV into dicts, converting numeric columns to int/float."""
+def load_songs(csv_path: str, verbose: bool = True) -> List[Dict]:
+    """Read songs from a CSV into dicts, converting numeric columns to int/float/bool."""
     songs = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -70,8 +71,10 @@ def load_songs(csv_path: str) -> List[Dict]:
                 row[field] = int(row[field])
             for field in FLOAT_FIELDS:
                 row[field] = float(row[field])
+            row["spotlight"] = str(row.get("spotlight", "false")).strip().lower() == "true"
             songs.append(row)
-    print(f"Loaded songs: {len(songs)}")
+    if verbose:
+        print(f"Loaded songs: {len(songs)}")
     return songs
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
