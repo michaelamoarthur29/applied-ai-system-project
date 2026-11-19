@@ -1,61 +1,61 @@
-%% MuseIQ Lite — culture-aware music recommender (planned architecture)
-%% Built on the Module 3 rule-based recommender, extended with RAG + guardrails + evaluation.
+%% MuseIQ Lite: culture-aware music recommender (as built)
+%% Module 3 rule-based recommender, extended with an agentic RAG loop, guardrails, and evaluation.
 flowchart TD
-    U(["Listener request<br/>'studying late, something calm'<br/>+ mood / activity"])
+    U(["Listener request<br/>'studying late, something calm'"])
 
-    subgraph INPUT["1 · Input guardrails"]
-        V["Validate and sanitize request<br/>empty, too long, off-topic"]
+    subgraph INPUT["1 · Input guardrails (src/guardrails.py)"]
+        V["Validate and sanitize<br/>reject empty or over 500 chars<br/>flag likely prompt injection"]
     end
 
-    subgraph AGENT["2 · Plan: Claude"]
-        P["Interpret request into a taste profile<br/>genre, mood, energy, acoustic, context"]
+    subgraph AGENT["2-4 · Claude agent loop (src/agent.py)"]
+        P["Plan: list_catalog_options<br/>map the request onto catalog genres and moods"]
+        R1["Retrieve: search_songs<br/>Module 3 score_song ranking<br/>optional spotlight_only"]
+        R2["Retrieve: get_culture_notes<br/>genre history + artist bios"]
+        G["Generate: submit_capsule<br/>songs + why + story + note ids + confidence"]
+        D["decline_request<br/>off-topic or rule-breaking"]
+        P --> R1 --> R2 --> G
+        P -.-> D
     end
 
-    subgraph RAG["3 · Retrieve"]
-        R1["Song retriever<br/>score_song over the catalog"]
-        R2["Culture retriever<br/>artist stories, genre origins, scenes"]
-        D1[("data/songs.csv")]
-        D2[("data/culture_notes")]
-        D1 --> R1
-        D2 --> R2
+    D1[("data/songs.csv<br/>24 songs, 9 spotlight")]
+    D2[("data/culture_notes.json<br/>32 notes")]
+    D1 --> R1
+    D2 --> R2
+
+    subgraph CHECK["5 · Output guardrails (check_capsule)"]
+        C1{"Songs from catalog AND retrieved?<br/>No repeated artist?<br/>At least 2 of 5 spotlight?<br/>Notes cited were retrieved?<br/>Confidence 0-1?"}
     end
 
-    subgraph GEN["4 · Generate: Claude"]
-        G["Build a Culture Capsule<br/>pick songs from retrieved candidates only<br/>and explain them with retrieved context"]
-    end
+    F["Rule-based fallback (src/fallback.py)<br/>keyword parser + score_song + fairness rerank<br/>no key, API error, refusal, or 2 failed revisions"]
+    O(["Culture Capsule<br/>ranked songs + why + cultural story + confidence"])
+    X(["Polite decline / input error"])
 
-    subgraph CHECK["5 · Output guardrails, self-check"]
-        C1{"Every song is in the catalog?<br/>No artist repeats?<br/>Spotlight-artist share at least 30%?"}
-        F["Fallback: rule-based ranking<br/>if the API fails or checks keep failing"]
-    end
-
-    O(["Culture Capsule<br/>ranked songs + why + cultural story"])
-
-    U --> V --> P
-    P --> R1 & R2
-    R1 --> G
-    R2 --> G
+    U --> V
+    V -- "valid" --> P
+    V -- "empty / too long" --> X
+    D --> X
     G --> C1
     C1 -- "pass" --> O
-    C1 -- "fail: retry once" --> G
-    C1 -- "still failing" --> F --> O
+    C1 -- "violations sent back (max 2 revisions)" --> G
+    C1 -- "still failing" --> F
+    AGENT -. "API error / refusal" .-> F
+    F --> O
 
-    LOG[["logs/museiq.log<br/>every step, errors, latency"]]
+    LOG[["logs/museiq.log + logs/traces/*.jsonl<br/>reasoning summaries, tool calls, guardrail results, latency"]]
     V -.-> LOG
-    P -.-> LOG
-    G -.-> LOG
+    AGENT -.-> LOG
     C1 -.-> LOG
+    F -.-> LOG
 
     subgraph TEST["Testing and human review"]
-        T1["pytest with a mocked Claude<br/>guardrails, fallback, parsing"]
-        T2["Evaluator script<br/>persona prompts: Cultural Explorer,<br/>Functional Listener, edge cases<br/>grounding, repetition, fairness, consistency, latency"]
-        H1["Human: listener feedback<br/>thumbs up / down on each capsule"]
-        H2["Human: developer reviews<br/>eval report and logs"]
+        T1["pytest (tests/)<br/>fake Claude client: guardrails, revisions,<br/>fallback on API errors, retrieval"]
+        T2["Evaluator (src/evaluate.py)<br/>persona + adversarial requests, pass/fail,<br/>confidence, consistency, style comparison"]
+        H1["Human: listener thumbs up / down<br/>logs/feedback.jsonl"]
+        H2["Human: developer reads<br/>reports/ and traces"]
     end
 
     T1 -. "verifies" .-> CHECK
     T2 -. "runs end to end" .-> U
     O --> H1
-    H1 -. "feedback logged" .-> LOG
     T2 --> H2
     LOG --> H2

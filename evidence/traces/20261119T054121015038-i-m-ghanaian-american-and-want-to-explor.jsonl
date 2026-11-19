@@ -1,0 +1,4 @@
+{"t": 0.0, "event": "request", "text": "I'm Ghanaian-American and want to explore the sounds my parents grew up with, an"}
+{"t": 0.001, "event": "fallback", "reason": "offline mode"}
+{"t": 0.002, "event": "fallback_profile", "profile": {"favorite_genre": "highlife", "favorite_mood": "any", "target_energy": 0.5, "likes_acoustic": false}}
+{"t": 0.002, "event": "final", "status": "capsule", "source": "fallback", "title": "Quick Picks (rule-based)", "picks": [19, 21, 15, 14, 17], "confidence": 0.41, "revisions": 0, "message": "offline mode", "latency_s": 0.0}

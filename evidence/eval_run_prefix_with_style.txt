@@ -1,0 +1,29 @@
+MuseIQ evaluation - mode: online (claude-opus-5-5, effort=medium)
+
+[PASS] explorer-ghana           status=capsule     source=claude   conf=0.70 rev=0 23.9s
+[PASS] functional-study         status=capsule     source=claude   conf=0.80 rev=0 21.9s
+[PASS] functional-gym           status=capsule     source=claude   conf=0.75 rev=0 15.6s
+[PASS] subspace-overthinkers    status=capsule     source=claude   conf=0.75 rev=0 19.4s
+[PASS] edge-missing-genre       status=capsule     source=claude   conf=0.30 rev=0 19.6s
+[PASS] guard-injection          status=declined    source=claude   conf=  -  rev=0 3.3s
+[PASS] guard-off-topic          status=declined    source=claude   conf=  -  rev=0 2.7s
+[PASS] guard-empty              status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] guard-too-long           status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] consistency (study request x2)  overlap=1.00 (need >= 0.50)
+
+10/10 cases passed. Claude self-rated confidence averaged 0.66 (min 0.30, max 0.80). Guardrails sent 0 capsule(s) back for revision; 0 of 5 capsules came from the rule-based fallback. Latency per capsule: median 19.6s, max 23.9s.
+
+Style comparison (same requests, baseline prompt vs MuseIQ voice + few-shot):
+  explorer-ghana           baseline  rubric=0.60 why_words=25.2  story_words=193  title='From Accra Sundays to Diaspora Dreams'
+  explorer-ghana           museiq    rubric=1.00 why_words=16.6  story_words=85   title='From Accra to Everywhere'
+  functional-study         baseline  rubric=0.80 why_words=18.6  story_words=160  title='Midnight Study Hall'
+  functional-study         museiq    rubric=1.00 why_words=15.6  story_words=76   title='Lamplight Over Open Notes'
+  functional-gym           baseline  rubric=0.60 why_words=16.2  story_words=163  title='Leg Day Ignition: From the Bronx to Birmingham to Lagos'
+  functional-gym           museiq    rubric=1.00 why_words=13    story_words=78   title='Heavy Iron, Steady Drums'
+  subspace-overthinkers    baseline  rubric=0.60 why_words=27.4  story_words=196  title='Pages Written After Midnight'
+  subspace-overthinkers    museiq    rubric=1.00 why_words=14.2  story_words=79   title='Pages Written After Midnight'
+  baseline: mean voice-rubric score 0.65, mean why length 21.9 words
+  museiq: mean voice-rubric score 1.00, mean why length 14.8 words
+
+Report written to reports/eval_report.md
+exit 0

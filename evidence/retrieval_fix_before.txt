@@ -1,0 +1,34 @@
+### Demo 2 - Cultural Explorer (agent + RAG), then the same request with the rule-based baseline
+$ python -m src.museiq I'm Ghanaian-American and want to explore the sounds my parents grew up with, and where that music went next.
+=== From Accra Sundays Outward ===
+source: Claude agent | style: museiq | revisions: 0 | tool calls: 7 | 22.2s
+
+1. Accra Sunday - Ama Serwaa Band  [highlife / joyful, energy 0.68]  *spotlight
+   Start where your parents did: highlife brass and guitar, the Sunday-afternoon dance
+   music of Accra.
+2. Lagos Lights - Tunde Ray  [afrobeats / happy, energy 0.74]  *spotlight
+   Hear highlife's next life, folded into bright Afrobeats drums built for West African
+   street parties.
+3. Diaspora Dreams - Kofi Mensah-Lane  [afro-fusion / uplifting, energy 0.64]  *spotlight
+   A diaspora sound mixing the music of home with the music of where you live now.
+4. Concrete Crown - Kilo Verse  [hip-hop / confident, energy 0.78]  *spotlight
+   American hip-hop, one of the threads Afrobeats and afro-fusion weave back in, closing
+   the loop toward your other home.
+5. Soweto Slow Burn - Lerato Deep  [amapiano / chill, energy 0.58]  *spotlight
+   A South African cousin showing how African dance music keeps traveling, from township
+   parties to dance floors worldwide.
+
+Culture story:
+   Ama Serwaa Band plays the brass-and-guitar highlife that reconnects diaspora-curious
+   listeners with their elders' dance music. That sound didn't stay still: Afrobeats
+   took shape in Ghana and Nigeria by mixing highlife with hip-hop, dancehall and R&B,
+   then reached global charts with help from diaspora scenes. Afro-fusion goes further,
+   blending home rhythms with the music of where artists live now. Meanwhile amapiano,
+   born in South Africa's townships, shows the continent's dance music spreading
+   worldwide on its own path.
+   sources: artist-ama-serwaa-band, genre-afrobeats, genre-afro-fusion, genre-amapiano, artist-tunde-ray
+
+Confidence: 0.70 - The catalog has one highlife song and good songs for what came after it (Afrobeats, afro-fusion), but there's no note on highlife history and only a single song for each genre.
+Trace: logs/traces/20261119T053130994856-i-m-ghanaian-american-and-want-to-explor.jsonl
+(exit code 0)
+

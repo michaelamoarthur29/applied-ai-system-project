@@ -1,0 +1,17 @@
+MuseIQ evaluation - mode: offline (rule-based)
+
+[FAIL] explorer-ghana           status=capsule     source=fallback conf=0.41 rev=0 0.0s
+         failed check: 2+ picks from highlife/afrobeats/afro-fusion
+[PASS] functional-study         status=capsule     source=fallback conf=0.41 rev=0 0.0s
+[PASS] functional-gym           status=capsule     source=fallback conf=0.45 rev=0 0.0s
+[PASS] subspace-overthinkers    status=capsule     source=fallback conf=0.38 rev=0 0.0s
+[PASS] edge-missing-genre       status=capsule     source=fallback conf=0.47 rev=0 0.0s
+[PASS] guard-injection          status=declined    source=fallback conf=  -  rev=0 0.0s
+[PASS] guard-off-topic          status=declined    source=fallback conf=  -  rev=0 0.0s
+[PASS] guard-empty              status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] guard-too-long           status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] consistency (study request x2)  overlap=1.00 (need >= 0.50)
+
+9/10 cases passed. Guardrails sent 0 capsule(s) back for revision; 5 of 5 capsules came from the rule-based fallback. Latency per capsule: median 0.0s, max 0.0s.
+
+Report written to reports/eval_report_offline.md

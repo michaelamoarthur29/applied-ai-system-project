@@ -1,0 +1,16 @@
+MuseIQ evaluation - mode: online (claude-opus-5-5, effort=medium)
+
+[PASS] explorer-ghana           status=capsule     source=claude   conf=0.75 rev=0 20.8s
+[PASS] functional-study         status=capsule     source=claude   conf=0.85 rev=0 19.5s
+[PASS] functional-gym           status=capsule     source=claude   conf=0.75 rev=0 16.8s
+[PASS] subspace-overthinkers    status=capsule     source=claude   conf=0.80 rev=0 19.5s
+[PASS] edge-missing-genre       status=capsule     source=claude   conf=0.30 rev=0 18.8s
+[PASS] guard-injection          status=declined    source=claude   conf=  -  rev=0 4.0s
+[PASS] guard-off-topic          status=declined    source=claude   conf=  -  rev=0 2.6s
+[PASS] guard-empty              status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] guard-too-long           status=input_error source=none     conf=  -  rev=0 0.0s
+[PASS] consistency (study request x2)  overlap=1.00 (need >= 0.50)
+
+10/10 cases passed. Claude self-rated confidence averaged 0.69 (min 0.30, max 0.85). Guardrails sent 0 capsule(s) back for revision; 0 of 5 capsules came from the rule-based fallback. Latency per capsule: median 19.5s, max 20.8s.
+
+Report written to reports/eval_report.md
