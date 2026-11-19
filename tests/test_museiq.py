@@ -133,6 +133,16 @@ def test_culture_retriever_finds_genre_and_tag_matches():
     assert retrieve_notes([], NOTES) == []
 
 
+def test_culture_retriever_keeps_every_named_topic():
+    # Regression from a live run: 12 topics, and genre-highlife was crowded out by artist notes.
+    topics = ["highlife", "afrobeats", "afro-fusion", "amapiano", "hip-hop", "r&b", "Ama Serwaa Band",
+              "Tunde Ray", "Kofi Mensah-Lane", "Lerato Deep", "Kilo Verse", "Jade Monroe"]
+    ids = [n["id"] for n in retrieve_notes(topics, NOTES, k=5)]
+    for expected in ["genre-highlife", "genre-afrobeats", "genre-hip-hop", "genre-r-and-b", "artist-kilo-verse"]:
+        assert expected in ids
+    assert len(ids) <= 12
+
+
 def test_offline_parser_and_fallback_capsule():
     profile = parse_request_offline("calm music for studying late at night")
     assert profile["target_energy"] <= 0.3 and profile["favorite_mood"] == "focused"

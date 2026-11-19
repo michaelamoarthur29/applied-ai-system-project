@@ -230,7 +230,7 @@ class MuseIQ:
             topics = args.get("topics")
             if not isinstance(topics, list) or not topics:
                 raise ValueError("get_culture_notes needs a non-empty list of topics.")
-            found = retrieve_notes([str(t) for t in topics[:8]], self.notes, k=5)
+            found = retrieve_notes([str(t) for t in topics], self.notes, k=5)
             retrieved_notes.update(n["id"] for n in found)
             return [{"id": n["id"], "kind": n["kind"], "about": n["about"], "text": n["text"]} for n in found]
         raise ValueError(f"Unknown tool: {name}")

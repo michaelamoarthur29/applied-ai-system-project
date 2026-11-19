@@ -24,23 +24,40 @@ def _words(text: str) -> set:
     return set(re.findall(r"[a-z0-9&'-]+", text.lower()))
 
 
+MAX_TOPICS = 12
+MAX_NOTES = 12
+
+
 def retrieve_notes(topics: List[str], notes: List[Dict], k: int = 4) -> List[Dict]:
-    """Return up to k notes ranked by relevance to the given topics (genres, artists, themes)."""
-    topics = [t.strip().lower() for t in topics if t and t.strip()]
+    """Return notes relevant to the given topics (genres, artists, themes).
+
+    Every topic that exactly names a note's subject is guaranteed its note. Remaining slots
+    (up to k) are filled by tag-overlap score. Fix from testing: a plain top-k by score let
+    tag-heavy artist notes push out the genre note the agent asked for by name.
+    """
+    seen, clean = set(), []
+    for t in topics:
+        t = (t or "").strip().lower()
+        if t and t not in seen:
+            seen.add(t)
+            clean.append(t)
+    topics = clean[:MAX_TOPICS]
     if not topics:
         return []
+
+    by_about = {n["about"].lower(): n for n in notes}
+    exact = [by_about[t] for t in topics if t in by_about]
+
     topic_words = set().union(*(_words(t) for t in topics))
     scored = []
     for note in notes:
-        about = note["about"].lower()
+        if note in exact:
+            continue
         tags = {t.lower() for t in note["tags"]}
         tag_words = set().union(*(_words(t) for t in tags)) if tags else set()
-        score = 0
-        if about in topics:
-            score += 3
-        score += sum(1 for t in topics if t in tags)
-        score += len(topic_words & tag_words) * 0.5
+        score = sum(1 for t in topics if t in tags) + len(topic_words & tag_words) * 0.5
         if score > 0:
             scored.append((score, note))
     scored.sort(key=lambda pair: (-pair[0], pair[1]["id"]))
-    return [note for _, note in scored[:k]]
+    limit = min(max(k, len(exact)), MAX_NOTES)
+    return (exact + [note for _, note in scored])[:limit]
