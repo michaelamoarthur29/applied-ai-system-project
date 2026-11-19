@@ -114,6 +114,7 @@ Other commands:
 
 | Command | What it does |
 |---|---|
+| `python -m src.museiq "<request>"` | Shows a **live step-by-step view** (plan, each search, notes, guardrail check) while the agent works; add `--quiet` to hide it |
 | `python -m src.museiq "<request>" --k 4` | Capsule with 4 songs (3-8 allowed) |
 | `python -m src.museiq "<request>" --style baseline` | Same agent without the MuseIQ voice guide and examples |
 | `python -m src.museiq "<request>" --offline` | Rule-based mode, no API call |

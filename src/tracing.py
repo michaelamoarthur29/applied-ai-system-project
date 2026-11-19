@@ -35,8 +35,9 @@ def get_logger() -> logging.Logger:
 class Trace:
     """Collects events for one run and writes them to a JSONL file."""
 
-    def __init__(self, request: str, enabled: bool = True, trace_dir: Path = TRACE_DIR):
+    def __init__(self, request: str, enabled: bool = True, trace_dir: Path = TRACE_DIR, listener=None):
         self.events = []
+        self.listener = listener
         self.start = time.perf_counter()
         self.path: Optional[Path] = None
         if enabled:
@@ -49,6 +50,11 @@ class Trace:
     def log(self, event: str, **data: Any) -> None:
         entry = {"t": round(time.perf_counter() - self.start, 3), "event": event, **data}
         self.events.append(entry)
+        if self.listener:
+            try:
+                self.listener(entry)
+            except Exception:  # a display problem must never break a run
+                pass
         if self.path:
             with open(self.path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")

@@ -63,13 +63,14 @@ def has_credentials() -> bool:
 class MuseIQ:
     def __init__(self, client=None, style: str = "museiq", k: int = DEFAULT_K, offline: bool = False,
                  songs: List[Dict] = None, notes: List[Dict] = None, trace: bool = True,
-                 model: str = MODEL, effort: str = EFFORT):
+                 model: str = MODEL, effort: str = EFFORT, on_event=None):
         self.songs = songs if songs is not None else load_songs(str(SONGS_PATH), verbose=False)
         self.notes = notes if notes is not None else load_notes(NOTES_PATH)
         self.songs_by_id = {s["id"]: s for s in self.songs}
         self.notes_by_id = {n["id"]: n for n in self.notes}
         self.style, self.k, self.model, self.effort = style, k, model, effort
         self.trace_enabled = trace
+        self.on_event = on_event
         self.offline = offline
         self.client = client
         if self.client is None and not offline and has_credentials():
@@ -78,7 +79,7 @@ class MuseIQ:
     # ------------------------------------------------------------------ public
     def run(self, raw_request: str) -> CapsuleResult:
         shown = (raw_request or "").strip()[:80]
-        trace = Trace(shown or "empty", enabled=self.trace_enabled)
+        trace = Trace(shown or "empty", enabled=self.trace_enabled, listener=self.on_event)
         result = CapsuleResult(status="capsule", source="claude", request=raw_request or "", style=self.style)
         try:
             clean = validate_request(raw_request)

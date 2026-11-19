@@ -52,6 +52,53 @@ def render(result: CapsuleResult) -> str:
     return "\n".join(lines)
 
 
+def live_printer(entry: dict) -> None:
+    """Print each agent step as it happens (stderr, so saved stdout transcripts stay clean)."""
+    ev, t = entry["event"], entry["t"]
+    say = lambda msg: print(f"  [{t:5.1f}s] {msg}", file=sys.stderr, flush=True)
+    if ev == "request":
+        say(f"request received: {entry['text']!r}")
+    elif ev == "input_flagged":
+        say(f"input guardrail flagged: {', '.join(entry['flags'])}")
+    elif ev == "input_rejected":
+        say(f"input guardrail rejected the request: {entry['reason']}")
+    elif ev == "model_turn":
+        say(f"Claude responded (turn {entry['turn'] + 1}), thinking about the next step...")
+    elif ev == "reasoning":
+        summary = " ".join(entry["summary"].split())
+        say("Claude's plan: " + (summary[:220] + "..." if len(summary) > 220 else summary))
+    elif ev == "tool_call":
+        args = entry["input"]
+        if entry["name"] == "search_songs":
+            extra = ", spotlight only" if args.get("spotlight_only") else ""
+            say(f"-> search_songs: genre={args.get('genre')}, mood={args.get('mood')}, energy={args.get('target_energy')}{extra}")
+        elif entry["name"] == "get_culture_notes":
+            say(f"-> get_culture_notes: {', '.join(map(str, args.get('topics', [])))}")
+        elif entry["name"] == "submit_capsule":
+            say(f"-> submit_capsule: '{args.get('title')}' with {len(args.get('picks', []))} songs")
+        else:
+            say(f"-> {entry['name']}")
+    elif ev == "tool_result":
+        s = entry["summary"]
+        if entry["name"] == "search_songs":
+            say(f"   found {len(s)} songs, top: {s[0] if s else 'none'}")
+        elif entry["name"] == "get_culture_notes":
+            say(f"   retrieved notes: {', '.join(s)}")
+        else:
+            say("   catalog options loaded")
+    elif ev == "guardrail_check":
+        if entry["passed"]:
+            say("output guardrails: PASSED (catalog, retrieved, no repeats, spotlight share, notes, confidence)")
+        else:
+            say("output guardrails: FAILED, sending back to Claude: " + "; ".join(entry["violations"]))
+    elif ev == "declined":
+        say("request declined")
+    elif ev == "fallback":
+        say(f"switching to rule-based fallback: {entry['reason']}")
+    elif ev == "final":
+        say(f"done in {entry['latency_s']:.1f}s\n")
+
+
 def ask_feedback(result: CapsuleResult) -> None:
     """Human-in-the-loop: record a thumbs up/down for the capsule in logs/feedback.jsonl."""
     try:
@@ -79,11 +126,16 @@ def main(argv=None) -> int:
     parser.add_argument("--style", choices=["museiq", "baseline"], default="museiq")
     parser.add_argument("--offline", action="store_true", help="skip Claude and use the rule-based recommender")
     parser.add_argument("--no-feedback", action="store_true", help="don't ask for a thumbs up/down")
+    parser.add_argument("--quiet", action="store_true", help="hide the live step-by-step view")
     args = parser.parse_args(argv)
     if not 3 <= args.k <= 8:
         parser.error("--k must be between 3 and 8")
 
-    result = MuseIQ(style=args.style, k=args.k, offline=args.offline).run(args.request)
+    live = sys.stderr.isatty() and not args.quiet
+    if live:
+        print("MuseIQ live view (each step as it happens):", file=sys.stderr, flush=True)
+    result = MuseIQ(style=args.style, k=args.k, offline=args.offline,
+                    on_event=live_printer if live else None).run(args.request)
     print(render(result))
     if result.status == "capsule" and not args.no_feedback and sys.stdin.isatty():
         ask_feedback(result)
