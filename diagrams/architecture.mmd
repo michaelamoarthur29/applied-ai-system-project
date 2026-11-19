@@ -1,0 +1,20 @@
+%% System architecture — Music Recommender (baseline from Module 3).
+%% Update this diagram as the applied AI system evolves.
+flowchart LR
+    subgraph Input
+        CSV[(data/songs.csv<br/>song catalog)]
+        P[User taste profiles<br/>src/main.py PROFILES]
+    end
+
+    subgraph Core["src/recommender.py"]
+        L[load_songs<br/>CSV to Song records]
+        S[score_song<br/>genre x2.0 + mood x1.0<br/>+ energy x1.5 + acoustic x0.5]
+        R[recommend_songs / Recommender.recommend<br/>sort by score, take top k]
+        E[explain_recommendation<br/>reasons for each score]
+    end
+
+    CSV --> L --> S
+    P --> S
+    S --> R --> E --> O[CLI output<br/>ranked songs + explanations]
+
+    T[tests/test_recommender.py<br/>pytest] -. verifies .-> Core
