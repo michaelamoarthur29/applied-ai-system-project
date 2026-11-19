@@ -1,20 +1,61 @@
-%% System architecture — Music Recommender (baseline from Module 3).
-%% Update this diagram as the applied AI system evolves.
-flowchart LR
-    subgraph Input
-        CSV[(data/songs.csv<br/>song catalog)]
-        P[User taste profiles<br/>src/main.py PROFILES]
+%% MuseIQ Lite — culture-aware music recommender (planned architecture)
+%% Built on the Module 3 rule-based recommender, extended with RAG + guardrails + evaluation.
+flowchart TD
+    U(["Listener request<br/>'studying late, something calm'<br/>+ mood / activity"])
+
+    subgraph INPUT["1 · Input guardrails"]
+        V["Validate and sanitize request<br/>empty, too long, off-topic"]
     end
 
-    subgraph Core["src/recommender.py"]
-        L[load_songs<br/>CSV to Song records]
-        S[score_song<br/>genre x2.0 + mood x1.0<br/>+ energy x1.5 + acoustic x0.5]
-        R[recommend_songs / Recommender.recommend<br/>sort by score, take top k]
-        E[explain_recommendation<br/>reasons for each score]
+    subgraph AGENT["2 · Plan: Claude"]
+        P["Interpret request into a taste profile<br/>genre, mood, energy, acoustic, context"]
     end
 
-    CSV --> L --> S
-    P --> S
-    S --> R --> E --> O[CLI output<br/>ranked songs + explanations]
+    subgraph RAG["3 · Retrieve"]
+        R1["Song retriever<br/>score_song over the catalog"]
+        R2["Culture retriever<br/>artist stories, genre origins, scenes"]
+        D1[("data/songs.csv")]
+        D2[("data/culture_notes")]
+        D1 --> R1
+        D2 --> R2
+    end
 
-    T[tests/test_recommender.py<br/>pytest] -. verifies .-> Core
+    subgraph GEN["4 · Generate: Claude"]
+        G["Build a Culture Capsule<br/>pick songs from retrieved candidates only<br/>and explain them with retrieved context"]
+    end
+
+    subgraph CHECK["5 · Output guardrails, self-check"]
+        C1{"Every song is in the catalog?<br/>No artist repeats?<br/>Spotlight-artist share at least 30%?"}
+        F["Fallback: rule-based ranking<br/>if the API fails or checks keep failing"]
+    end
+
+    O(["Culture Capsule<br/>ranked songs + why + cultural story"])
+
+    U --> V --> P
+    P --> R1 & R2
+    R1 --> G
+    R2 --> G
+    G --> C1
+    C1 -- "pass" --> O
+    C1 -- "fail: retry once" --> G
+    C1 -- "still failing" --> F --> O
+
+    LOG[["logs/museiq.log<br/>every step, errors, latency"]]
+    V -.-> LOG
+    P -.-> LOG
+    G -.-> LOG
+    C1 -.-> LOG
+
+    subgraph TEST["Testing and human review"]
+        T1["pytest with a mocked Claude<br/>guardrails, fallback, parsing"]
+        T2["Evaluator script<br/>persona prompts: Cultural Explorer,<br/>Functional Listener, edge cases<br/>grounding, repetition, fairness, consistency, latency"]
+        H1["Human: listener feedback<br/>thumbs up / down on each capsule"]
+        H2["Human: developer reviews<br/>eval report and logs"]
+    end
+
+    T1 -. "verifies" .-> CHECK
+    T2 -. "runs end to end" .-> U
+    O --> H1
+    H1 -. "feedback logged" .-> LOG
+    T2 --> H2
+    LOG --> H2
